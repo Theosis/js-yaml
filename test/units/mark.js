@@ -1,22 +1,21 @@
 'use strict';
-/*global it */
 
 
-var fs     = require('fs');
-var path   = require('path');
 var assert = require('assert');
+var path   = require('path');
+var fs     = require('fs');
 var Mark   = require('../../lib/js-yaml/mark');
 
 
-it('Mark', function () {
-  var filepath = path.join(__dirname, 'samples/mark.data'),
+test('Mark', function () {
+  var filepath = path.join(__dirname, 'mark.txt'),
       filedata = fs.readFileSync(filepath, 'utf8');
 
   filedata.split('---\n').slice(1).forEach(function (input) {
     var index = 0, line = 0, column = 0,
         mark, snippet, data, pointer, temp;
 
-    assert(0 <= input.indexOf('*'));
+    assert(input.indexOf('*') >= 0);
 
     while (input[index] !== '*') {
       if (input[index] === '\n') {

@@ -1,5 +1,3 @@
-PATH        := ./node_modules/.bin:${PATH}
-
 NPM_PACKAGE := $(shell node -e 'process.stdout.write(require("./package.json").name)')
 NPM_VERSION := $(shell node -e 'process.stdout.write(require("./package.json").version)')
 
@@ -17,41 +15,36 @@ help:
 	echo "make lint       - Lint sources with JSHint"
 	echo "make test       - Lint sources and run all tests"
 	echo "make browserify - Build browserified version"
-	echo "make dev-deps   - Install developer dependencies"
 	echo "make gh-pages   - Build and push API docs into gh-pages branch"
 	echo "make publish    - Set new version tag and publish npm package"
 	echo "make todo       - Find and list all TODOs"
 
 
 lint:
-	if test ! `which jshint` ; then \
-		echo "You need 'jshint' installed in order to run lint." >&2 ; \
-		echo "  $ make dev-deps" >&2 ; \
-		exit 128 ; \
-		fi
-	jshint . --show-non-errors
+	./node_modules/.bin/eslint .
 
 
 test: lint
-	@if test ! `which mocha` ; then \
-		echo "You need 'mocha' installed in order to run tests." >&2 ; \
-		echo "  $ make dev-deps" >&2 ; \
-		exit 128 ; \
-		fi
-	NODE_ENV=test mocha -R spec
+	@node -e "require('./bower.json')"
+	@node -e "require('./package.json')"
+	./node_modules/.bin/mocha -R spec
 
 
-dev-deps:
-	@if test ! `which npm` ; then \
-		echo "You need 'npm' installed." >&2 ; \
-		echo "  See: http://npmjs.org/" >&2 ; \
-		exit 128 ; \
-		fi
-	npm install -g jshint
-	npm install
+demo: lint
+	rm -rf ./demo
+	mkdir ./demo
+	cp ./node_modules/codemirror/lib/codemirror.css ./demo/
+	cp ./support/demo_template/index.html ./demo/
+	cp ./support/demo_template/demo.css ./demo/
+	./node_modules/.bin/browserify ./support/demo_template/demo.js -r esprima > ./demo/demo.js
 
 
-gh-pages:
+coverage:
+	rm -rf coverage
+	./node_modules/.bin/istanbul cover node_modules/.bin/_mocha
+
+
+gh-pages: demo
 	@if test -z ${REMOTE_REPO} ; then \
 		echo 'Remote repo URL not found' >&2 ; \
 		exit 128 ; \
@@ -87,27 +80,21 @@ publish:
 
 
 browserify:
-	if test ! `which browserify` ; then npm install browserify ; fi
-	if test ! `which uglifyjs` ; then npm install uglify-js ; fi
+	rm -rf ./dist
+	mkdir dist
 	# Browserify
 	( echo -n "/* ${NPM_PACKAGE} ${NPM_VERSION} ${GITHUB_PROJ} */" ; \
-		browserify -r ./ -s jsyaml -x esprima \
-		) > js-yaml.js
+		./node_modules/.bin/browserify -r ./ -s jsyaml \
+		) > dist/js-yaml.js
 	# Minify
-	uglifyjs js-yaml.js -c -m \
+	./node_modules/.bin/uglifyjs dist/js-yaml.js -c -m \
 		--preamble "/* ${NPM_PACKAGE} ${NPM_VERSION} ${GITHUB_PROJ} */" \
-		> js-yaml.min.js
-	# Update bower package
-	sed -i -r -e \
-		"s/(\"version\":\s*)\"[0-9]+[.][0-9]+[.][0-9]+\"/\1\"${NPM_VERSION}\"/" \
-		bower.json
-	# Update browser demo
-	cp js-yaml.js demo/js/
+		> dist/js-yaml.min.js
 
 
 todo:
 	grep 'TODO' -n -r ./lib 2>/dev/null || test true
 
 
-.PHONY: publish lint test dev-deps gh-pages todo
-.SILENT: help lint test todo
+.PHONY: publish lint test dev-deps gh-pages todo coverage demo
+.SILENT: help lint test todo coverage

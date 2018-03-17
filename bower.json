@@ -1,10 +1,9 @@
 
 {
   "name": "js-yaml",
-  "main": "js-yaml.js",
-  "version": "3.0.1",
+  "main": "dist/js-yaml.js",
   "homepage": "https://github.com/nodeca/js-yaml",
-  "authors": [ "Dervus Grim <dervus.grim@gmail.com>",
+  "authors": [ "Vladimir Zapparov <dervus.grim@gmail.com>",
                "Vitaly Puzrin <vitaly@rcdesign.ru>",
                "Aleksey V Zapparov <ixti@member.fsf.org>",
                "Martin Grenfell <martin.grenfell@gmail.com>" ],
@@ -14,7 +13,14 @@
   "ignore": [
     "**/.*",
     "node_modules",
+    "benchmark",
+    "bin",
     "bower_components",
+    "coverage",
+    "demo",
+    "examples",
+    "lib",
+    "support",
     "test",
     "Makefile",
     "index*",
